@@ -1,99 +1,64 @@
 🧠 Workflow Breakdown:
-Input Reception
-
-Accepts a file containing 1–10 million VINs (17-character alphanumeric).
-
-Validation & Pre-checks
-
-Ensure the file is non-empty.
-
-Run pre-validation logic (e.g., format, duplication, line count, etc.).
-
-UUID & Chunking
-
-Generate a UUID for the batch (used for tracking and folder structure).
-
-Split the input file into 1M-record segments.
-
-Upload to S3
-
-Create a folder in a temporary S3 bucket named after the UUID.
-
-Upload each chunk file to this folder.
-
-Processing
-
-For each chunk:
-
-Load VINs line by line.
-
-Call the existing decodeService for each VIN using multithreading.
-
-Collect each VIN's 300-attribute JSON response.
-
-Combine responses into a single output file (JSON lines format).
-
-Post-processing
-
-Run final validations on the output file (e.g., schema check, completeness).
-
-Upload the file to a final output S3 folder.
-
-Notification
-
-Based on post-validation result, send a success/failure email.
-
-Include output file link and summary.
+1. Input Reception
+2. Accepts a file containing 1–10 million VINs (17-character alphanumeric).
+3. Validation & Pre-checks
+4. Ensure the file is non-empty.
+5. Run pre-validation logic (e.g., format, duplication, line count, etc.).
+6. UUID & Chunking
+7. Generate a UUID for the batch (used for tracking and folder structure).
+8. Split the input file into 1M-record segments.
+9. Upload to S3
+10. Create a folder in a temporary S3 bucket named after the UUID.
+11. Upload each chunk file to this folder.
+12. Processing
+13. For each chunk:
+14. Load VINs line by line.
+15. Call the existing decodeService for each VIN using multithreading.
+16. Collect each VIN's 300-attribute JSON response.
+17. Combine responses into a single output file (JSON lines format).
+18. Post-processing
+19. Run final validations on the output file (e.g., schema check, completeness).
+20. Upload the file to a final output S3 folder.
+21. Notification
+22. Based on post-validation result, send a success/failure email.
+23. Include output file link and summary.
 
 -----------------------------------------------
 ⚙️ service
-VinBatchService – Orchestrates validation, chunking, UUID generation, and email notifications.
-
-VinChunkProcessorService – Multi-threaded processing of VIN chunks.
-
-DecodeServiceClient – Makes actual calls to the external decodeService.
+1. VinBatchService – Orchestrates validation, chunking, UUID generation, and email notifications.
+2. VinChunkProcessorService – Multi-threaded processing of VIN chunks.
+3. DecodeServiceClient – Makes actual calls to the external decodeService.
 
 🧰 utils
-FileSplitter – Splits the input file into 1M VIN chunks.
-
-FileValidator – Validates input and output files (format, record count, etc.).
-
-UUIDGenerator – Generates UUIDs for batch processing.
-
-S3Utils – Uploads/Downloads files to/from S3.
-
-EmailNotifier – Sends notification emails after processing.
+1. FileSplitter – Splits the input file into 1M VIN chunks.
+2. FileValidator – Validates input and output files (format, record count, etc.).
+3. UUIDGenerator – Generates UUIDs for batch processing.
+4. S3Utils – Uploads/Downloads files to/from S3.
+5. EmailNotifier – Sends notification emails after processing.
 
 🧪 model
-VinBatchRequest – DTO for input file and metadata.
-
-VinBatchResponse – DTO with batch result details.
-
-VinChunk – Represents one chunk of VINs.
-
-DecodeResponse – 300-attribute JSON response from decode service.
+1. VinBatchRequest – DTO for input file and metadata.
+2. VinBatchResponse – DTO with batch result details.
+3. VinChunk – Represents one chunk of VINs.
+4. DecodeResponse – 300-attribute JSON response from decode service.
 
 📦 config
-S3Config – S3 bucket, folder, and credentials configuration.
-
-AppConfig – Generic app-level config (e.g., thresholds, paths).
-
-ThreadPoolConfig – Configures the multithreaded executor.
+1. S3Config – S3 bucket, folder, and credentials configuration.
+2. AppConfig – Generic app-level config (e.g., thresholds, paths).
+3. ThreadPoolConfig – Configures the multithreaded executor.
 
 🧾 repository
-ManifestRepository – Persists metadata for each batch and chunk status.
+1. ManifestRepository – Persists metadata for each batch and chunk status.
 
 ⚠️ exception
-InvalidInputFileException
-
-VinProcessingException
-
-S3UploadException
+1. InvalidInputFileException
+2. VinProcessingException
+3. S3UploadException
 
 -------------------------------------------
 com.example.vinbatch
 
-├── VinBatchApplication.java
+`├── VinBatchApplication.java
 │
 ├── controller
 │   └── VinBatchController.java
@@ -127,28 +92,29 @@ com.example.vinbatch
 ├── FileValidator.java
 ├── S3Utils.java
 ├── UUIDGenerator.java
-└── EmailNotifier.java
+└── EmailNotifier.java`
 
 ---------------------------------------------
 
 🧩 Design Update
 ✅ Add to model
-java
-Copy
-Edit
-public enum BatchType {
-BATCH1, BATCH2, BATCH3, BATCH4, BATCH5;
-}
-✅ Modify VinBatchRequest
-java
-Copy
-Edit
-public class VinBatchRequest {
-private MultipartFile inputFile;
-private BatchType batchType;
+1. java
+2. Copy
+3. Edit
+4. public enum BatchType {
+5. BATCH1, BATCH2, BATCH3, BATCH4, BATCH5;
+6. }
 
-    // add logic to infer BatchType from inputFile.getOriginalFilename()
-}
+✅ Modify VinBatchRequest
+1. java
+2. Copy
+3. Edit
+4. public class VinBatchRequest {
+5. private MultipartFile inputFile;
+6. private BatchType batchType;
+7. 
+8.     // add logic to infer BatchType from inputFile.getOriginalFilename()
+9. }
 🧠 Service Strategy Pattern for Decode
 Introduce a strategy pattern for DecodeServiceClient.
 
@@ -170,7 +136,7 @@ public class Batch2DecodeStrategy implements DecodeStrategy { /* ... */ }
 java
 Copy
 Edit
-@Component
+`@Component
 public class DecodeStrategyFactory {
 private final Map<BatchType, DecodeStrategy> strategies;
 
@@ -183,23 +149,23 @@ private final Map<BatchType, DecodeStrategy> strategies;
     public DecodeStrategy getStrategy(BatchType batchType) {
         return strategies.get(batchType);
     }
-}
+}`
 Use an annotation like:
 
 java
 Copy
 Edit
-@Target(TYPE)
+`@Target(TYPE)
 @Retention(RUNTIME)
 public @interface StrategyFor {
 BatchType value();
-}
+}`
 🧪 Usage in VinChunkProcessorService
 java
 Copy
 Edit
-DecodeStrategy strategy = decodeStrategyFactory.getStrategy(batchType);
-DecodeResponse result = strategy.decode(vin);
+`DecodeStrategy strategy = decodeStrategyFactory.getStrategy(batchType);
+DecodeResponse result = strategy.decode(vin);`
 
 --------------------------------------------------------
 
@@ -208,18 +174,19 @@ DecodeResponse result = strategy.decode(vin);
 java
 Copy
 Edit
-public interface BatchService {
+`public interface BatchService {
 void validateInput(String inputFilePath);
 List<File> breakInput(String inputFilePath);
 List<String> processChunks(List<File> chunkFiles);
 List<String> formatOutput(List<String> rawOutputs);
 void writeOutputFile(List<String> formattedOutput, String uuid);
-}
+}`
+
 🔹 2. Abstract Class for Sequence Enforcement
 java
 Copy
 Edit
-public abstract class AbstractBatchService implements BatchService {
+`public abstract class AbstractBatchService implements BatchService {
 
     public final void executeBatch(String inputFilePath, String uuid) {
         validateInput(inputFilePath);
@@ -228,14 +195,15 @@ public abstract class AbstractBatchService implements BatchService {
         List<String> formatted = formatOutput(rawOutputs);
         writeOutputFile(formatted, uuid);
     }
-}
+}`
+
 ✅ The final method executeBatch enforces the sequence. Each subclass only needs to implement the steps.
 
 🔹 3. BatchService Implementations
 java
 Copy
 Edit
-@Service
+`@Service
 @StrategyFor(BatchType.BATCH1)
 public class Batch1ServiceImpl extends AbstractBatchService {
 @Override public void validateInput(String inputFilePath) { /* ... */ }
@@ -243,14 +211,14 @@ public class Batch1ServiceImpl extends AbstractBatchService {
 @Override public List<String> processChunks(List<File> chunks) { /* ... */ }
 @Override public List<String> formatOutput(List<String> raw) { /* ... */ }
 @Override public void writeOutputFile(List<String> formatted, String uuid) { /* ... */ }
-}
+}`
 Repeat for Batch2ServiceImpl, ..., Batch5ServiceImpl.
 
 🔹 4. BatchServiceFactory Based on File Name
 java
 Copy
 Edit
-@Component
+`@Component
 public class BatchServiceFactory {
 
     private final Map<BatchType, AbstractBatchService> strategyMap;
@@ -272,12 +240,13 @@ public class BatchServiceFactory {
         // etc...
         throw new IllegalArgumentException("Unknown batch type in file: " + fileName);
     }
-}
+}`
+
 🔹 5. Run Method in BatchApplication
 java
 Copy
 Edit
-@SpringBootApplication
+`@SpringBootApplication
 public class BatchApplication implements CommandLineRunner {
 
     @Autowired
@@ -293,7 +262,7 @@ public class BatchApplication implements CommandLineRunner {
 
         System.out.println("Batch processing completed for UUID: " + uuid);
     }
-}
+}`
 
 --------------------------------------------------------
 
@@ -302,20 +271,21 @@ public class BatchApplication implements CommandLineRunner {
    java
    Copy
    Edit
-   public enum BatchLifecyclePhase {
+   `public enum BatchLifecyclePhase {
    VALIDATE,
    SPLIT,
    PROCESS,
    FORMAT,
    WRITE
-   }
+   }`
+
 2. Define Lifecycle Step Interfaces
    Break the BatchService into granular interfaces:
 
 java
 Copy
 Edit
-public interface BatchValidator {
+`public interface BatchValidator {
 void validate(String inputPath);
 }
 
@@ -333,14 +303,14 @@ List<String> format(List<String> raw);
 
 public interface OutputWriter {
 void write(List<String> formatted, String uuid);
-}
+}`
 Each batch implementation must implement all five, but their logic is separated.
 
 3. Abstract Template: Final Lifecycle Method
    java
    Copy
    Edit
-   public abstract class AbstractBatchLifecycleExecutor
+   `public abstract class AbstractBatchLifecycleExecutor
    implements BatchValidator, InputSplitter, ChunkProcessor, OutputFormatter, OutputWriter {
 
    public final void runLifecycle(String inputPath, String uuid) {
@@ -363,14 +333,15 @@ Each batch implementation must implement all five, but their logic is separated.
    private void logPhase(BatchLifecyclePhase phase) {
    System.out.println(">> Starting: " + phase);
    }
-   }
+   }`
    🔐 The key is: runLifecycle() is final and defines the only valid order.
+
 
 4. Concrete Implementation
    java
    Copy
    Edit
-   @Service
+   `@Service
    @StrategyFor(BatchType.BATCH1)
    public class Batch1ServiceImpl extends AbstractBatchLifecycleExecutor {
 
@@ -398,7 +369,7 @@ Each batch implementation must implement all five, but their logic is separated.
    public void write(List<String> formatted, String uuid) {
    // write to S3
    }
-   }
+   }`
 ---------------------------------------
 
 

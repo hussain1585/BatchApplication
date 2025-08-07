@@ -58,7 +58,7 @@
 -------------------------------------------
 com.example.vinbatch
 
-`├── VinBatchApplication.java
+├── VinBatchApplication.java
 │
 ├── controller
 │   └── VinBatchController.java
@@ -92,7 +92,7 @@ com.example.vinbatch
 ├── FileValidator.java
 ├── S3Utils.java
 ├── UUIDGenerator.java
-└── EmailNotifier.java`
+└── EmailNotifier.java
 
 ---------------------------------------------
 
@@ -136,7 +136,7 @@ public class Batch2DecodeStrategy implements DecodeStrategy { /* ... */ }
 java
 Copy
 Edit
-`@Component
+@Component
 public class DecodeStrategyFactory {
 private final Map<BatchType, DecodeStrategy> strategies;
 
@@ -149,7 +149,7 @@ private final Map<BatchType, DecodeStrategy> strategies;
     public DecodeStrategy getStrategy(BatchType batchType) {
         return strategies.get(batchType);
     }
-}`
+}
 Use an annotation like:
 
 java

@@ -1,5 +1,5 @@
 package com.hussi.service;
 
-public interface BatchExecutorImpl {
+public class BatchExecutorImpl {
 
 }

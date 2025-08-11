@@ -372,4 +372,29 @@ Each batch implementation must implement all five, but their logic is separated.
    }`
 ---------------------------------------
 
+## Practical recommendations for 10M VINs (regardless of option)
+
+### Chunking
+
+Don’t load entire file. Process in chunks (10k–100k VINs per chunk depending on memory). Default: try 10k–50k and tune.
+For each chunk run VIN-parallel decoding (use UseCaseExecutor that returns CompletableFuture per VIN) with a bounded thread-pool.
+### Bounded parallelism
+Use a ThreadPoolExecutor with controlled thread count for CPU-bound work. Use a larger pool for I/O-bound operations (S3).
+Limit concurrent CompletableFuture joins to avoid OOM.
+### Streaming / local temp storage + multipart upload
+Read from S3 using streams (S3 SDK InputStream).
+Write processed lines to local temp file and upload final output using S3 multipart upload per chunk (or append parts) to reduce number of small PUTs.
+### Avoid redundant S3 round-trips
+Don’t PUT intermediate files after each stage unless necessary. Keep intermediate data on local ephemeral disk or memory for chunk duration.
+### Backpressure / pacing
+If decode is slower than input read, throttle reading (e.g., read chunk, submit, then read next chunk only when concurrency allows).
+### Failure handling & resume
+Maintain a manifest (S3 or DB) that records progress per chunk (start offset, end offset, status). This makes retries/resume easier.
+### Metrics & tracing
+Add counters/timers per stage in BatchContext or use APM traces per chunk. This helps tune chunk size and parallelism.
+### Memory-safe collections
+Use ArrayList sized to chunk size, avoid additional copying (don’t call stream().collect(toList()) unnecessarily).
+### Compress output
+If downstream supports it, gzip the output to reduce S3 transfer/storage cost.
+
 

@@ -14,4 +14,10 @@ public class DecodedPojo {
     private String field8;
     private String field9;
     private String field10;
+
+    private int field11;
+    private int field12;
+    private int field13;
+    private int field14;
+    private int field15;
 }
